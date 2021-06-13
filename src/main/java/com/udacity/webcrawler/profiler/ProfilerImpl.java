@@ -3,6 +3,10 @@ package com.udacity.webcrawler.profiler;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -32,14 +36,28 @@ final class ProfilerImpl implements Profiler {
     // TODO: Use a dynamic proxy (java.lang.reflect.Proxy) to "wrap" the delegate in a
     //       ProfilingMethodInterceptor and return a dynamic proxy from this method.
     //       See https://docs.oracle.com/javase/10/docs/api/java/lang/reflect/Proxy.html.
-
-    return delegate;
+    boolean isValid = checkProfilerHasAnnotation(klass);
+    if (!isValid) {
+      throw new IllegalArgumentException("Profiler.wrap() should throw an IllegalArgumentException if the wrapped interface does not contain a @Profiled method.");
+    }
+    Objects.requireNonNull(klass);
+    InvocationHandler invocationHandler = new ProfilingMethodInterceptor(clock, delegate, state);
+    T instance = (T) Proxy.newProxyInstance(klass.getClassLoader(), new Class[]{klass}, invocationHandler);
+    return instance;
   }
 
   @Override
-  public void writeData(Path path) {
+  public void writeData(Path path) throws IOException {
     // TODO: Write the ProfilingState data to the given file path. If a file already exists at that
     //       path, the new data should be appended to the existing file.
+    Objects.requireNonNull(path);
+    Writer writer = null;
+    if (Files.notExists(path)) {
+      Files.createFile(path);
+    }
+    writer = Files.newBufferedWriter(path);
+    writeData(writer);
+    writer.flush();
   }
 
   @Override
@@ -49,4 +67,18 @@ final class ProfilerImpl implements Profiler {
     state.write(writer);
     writer.write(System.lineSeparator());
   }
+
+  private boolean checkProfilerHasAnnotation(Class<?> klass) {
+    Method methodArr[] = klass.getDeclaredMethods();
+    if (methodArr == null || methodArr.length == 0) {
+      return false;
+    }
+    for (Method method : methodArr) {
+      if (method.getAnnotation(Profiled.class) != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

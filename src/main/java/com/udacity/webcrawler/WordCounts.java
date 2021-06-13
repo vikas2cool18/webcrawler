@@ -38,7 +38,7 @@ final class WordCounts {
       Map.Entry<String, Integer> entry = sortedCounts.poll();
       topCounts.put(entry.getKey(), entry.getValue());
     }*/
-    wordCounts.entrySet().stream().limit(Math.min(popularWordCount, wordCounts.size()))
+    wordCounts.entrySet().stream().sorted(new WordCountComparator()).limit(Math.min(popularWordCount, wordCounts.size()))
             .forEach(entry -> topCounts.put(entry.getKey(), entry.getValue()));
     return topCounts;
   }
