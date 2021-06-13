@@ -11,6 +11,15 @@ Q1. Run the web crawler using the configurations located at src/main/config/writ
 
     Why did the parser take more time when run with ParallelWebCrawler?
 
+    Ans:
+    SequentialWebCrawler:
+        {"wordCounts":{"data":137,"learning":91,"program":83,"with":80,"science":57},"urlsVisited":4}
+
+    ParallelWebCrawler:
+        {"wordCounts":{"data":654,"program":405,"udacity":379,"with":371,"learning":323},"urlsVisited":22}
+        PageParser took time due to large amount of data processing in ParallelWebCrawler. For an given timeout, parallel web crawler have downloaded
+        more number of html pages which is greater than sequential one. Hence page parsing for those pages would take additional time in ParallelWebCrawler.
+
 
 Q2. Your manager ran your crawler on her old personal computer, using the configurations from Q1, and she notices that
     the sequential crawler actually outperforms the parallel crawler. She would like to know why.
@@ -21,12 +30,28 @@ Q2. Your manager ran your crawler on her old personal computer, using the config
     (b) Suggest one scenario in which the parallel web crawler will almost certainly perform better than the sequential
         crawler. Why will it perform better?
 
+        Ans:
+        (a) Single-Threaded/ Single Processor:
+            Since the manager uses old computer, it would be likely single threaded/processor environment. Worker threads can execute only one task at a time.
+            So both sequential crawler and paraller crawler will behave the same. Also in parallel web crawler, ForkJoinPool takes additional time
+            on splitting the tasks and merging the results, it would be slower.
+
+        (b) Multi-processor/Multi-Threaded environment:
+            ForkJoinPool “forks”, recursively breaking the task into smaller independent subtasks until they are
+            simple enough to be executed asynchronously.
+            After that, the “join” part begins, in which results of all subtasks are recursively joined into a single result, or in the case of a
+            task which returns void, the program simply waits until every subtask is executed. Hence there are lot of worker threads which will help
+            the crawler task to perform better.
 
 Q3. Analyze your method profiler through the lens of Aspect Oriented Programming, by answering the following questions:
 
     (a) What cross-cutting concern is being addressed by the com.udacity.webcrawler.profiler.Profiler class?
 
     (b) What are the join points of the Profiler in the web crawler program?
+
+    Ans:
+    (a)  Providing proxy instance for methods having @Profile annotation at runtime. Provides writing the profiler data to file by given path or writer.
+    (b)  The profiler aggregates information about profiled method calls, and how long they took. Here the join point is Methods annotated with @Profiler annotation
 
 
 Q4. Identify three (3) different design patterns used in this project, and explain which interfaces, classes, and/or
@@ -35,4 +60,14 @@ Q4. Identify three (3) different design patterns used in this project, and expla
     For each pattern, name one thing about the pattern that you LIKED, and one thing you DISLIKED. If you did not like
     anything, you can name two things you disliked.
 
-
+Ans:
+Builder Pattern: CrawlerConfiguration.Builder, Result.Builder.
+        Like: Builder pattern helps us to provide mandatory and optional arguments for an object. We can ignore fields as well in Crawler.
+        Dislike: It create more code and could create complexity in dto getters and setters.
+Proxy Pattern: ProfilerImpl, WebCrawlerModule
+        Like: Security. Avoid creating objects which are huge in size.
+        Dislike: Create another layer of abstraction in which sometimes creates issues when the user would use real subject code
+                 and proxy class as well.
+Singleton Pattern : ProfilerModule
+        Like: Avoid creating objects of heavy in size. No need to create object after one time.
+        Dislike: Singleton hinders unit testing. They carry state around lifecycle of the application.They violate single responsibility principle.
