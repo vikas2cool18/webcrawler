@@ -12,13 +12,11 @@ Q1. Run the web crawler using the configurations located at src/main/config/writ
     Why did the parser take more time when run with ParallelWebCrawler?
 
     Ans:
-    SequentialWebCrawler:
-        {"wordCounts":{"data":137,"learning":91,"program":83,"with":80,"science":57},"urlsVisited":4}
+   The major reason here for the parser to state using more time is cause the Profiler which profiles the time
+   taken by the method to execute, actually gives the sum of time taken by the method in all the threads
+   For example if there are 100 threads, and each thread takes 1 sec to execute, then logically
+   the program should take less than 2 secs to finish, but the Profiler will show 100 seconds:v:
 
-    ParallelWebCrawler:
-        {"wordCounts":{"data":654,"program":405,"udacity":379,"with":371,"learning":323},"urlsVisited":22}
-        PageParser took time due to large amount of data processing in ParallelWebCrawler. For an given timeout, parallel web crawler have downloaded
-        more number of html pages which is greater than sequential one. Hence page parsing for those pages would take additional time in ParallelWebCrawler.
 
 
 Q2. Your manager ran your crawler on her old personal computer, using the configurations from Q1, and she notices that
