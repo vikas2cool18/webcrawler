@@ -34,16 +34,13 @@ public final class ConfigurationLoader {
    */
   public CrawlerConfiguration load() throws IOException {
     // TODO: Fill in this method.
-    /*FileReader fileReader = null;*/
-    CrawlerConfiguration crawlerConfiguration = null;
-    try (FileReader fileReader = new FileReader(path.toFile())) {
-      crawlerConfiguration = read(fileReader);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
+    try (Reader reader = Files.newBufferedReader(path)) {
+      return read(reader);
+    } catch (Exception e) {
+      System.err.println("Exception at load(), " + e.getMessage());
     }
-    return crawlerConfiguration;
+    return null;
   }
-
   /**
    * Loads crawler configuration from the given reader.
    *
@@ -54,11 +51,15 @@ public final class ConfigurationLoader {
     // This is here to get rid of the unused variable warning.
     Objects.requireNonNull(reader);
     // TODO: Fill in this method
-    JsonFactory jsonFactory = new JsonFactory();
-    jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-    jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
-    ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
-    CrawlerConfiguration crawlerConfiguration = objectMapper.readValue(reader, CrawlerConfiguration.class);
-    return crawlerConfiguration;
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+      CrawlerConfiguration.Builder crawlerConfigurationBuilder = objectMapper.readValue(reader, CrawlerConfiguration.Builder.class);
+      CrawlerConfiguration crawlerConfiguration = crawlerConfigurationBuilder.build();
+      return crawlerConfiguration;
+    } catch (Exception e) {
+      System.err.println("Exception at read(), " + e.getLocalizedMessage());
+    }
+    return null;
   }
 }
